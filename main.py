@@ -31,15 +31,52 @@ page_source = driver.page_source
 soup = BeautifulSoup(page_source, 'lxml')
 
 # Helper functions for webscraping
+def getAllServicesDict():
+    global servicesDict
+    servicesDict = dict()
+    servicesList = soup.find(id='menu_scroll', class_='s_scroll')
+    servicesNames = servicesList.find_all('div')
+    # starting col in excel sheet
+    col = 4
+    for sN in servicesNames:
+        name = sN.text.strip()
+        servicesDict[name] = col
+        col += 1
+    return servicesDict
 
-storeInfoList = ['county', 'district', 'name', 'address']
-# all 35 services available
-servicesList = ['停車場', '廁所', 'ATM', '座位區', 'ibon WiFi', 'OPEN! STORE',
-    '千禧血壓站', '外送咖啡服務', '霜淇淋', '台塑有機蔬菜', '美妝', 'Mister Donut甜甜圈',
-    'ibon', '現萃茶', '現蒸地瓜', '統一生機', 'OPEN!兒童閱覽室', 'K·Seren', '21TOGO',
-    '烘培坊', '!+? CAFE RESERVE', '博客來', '糖果屋', '日本7-ELEVEN限定',
-    '國際精品專櫃', '精品咖啡', 'CITY CAFE氮氣飲品', '天素地蔬', '嚴選素材冷凍鮮物',
-    '光合帕尼尼', '冷凍交貨便', '酒BAR', '寵物生活專區', '酷聖石', '甜點專櫃']
+def initExcelSheet():
+    global workbook
+    global worksheet
+    # global variable to keep track of next excel row
+    global row
+    storeInfoList = ['county', 'district', 'name', 'address']
+    workbook = xlsxwriter.Workbook('storeData711.xlsx')
+    worksheet = workbook.add_worksheet()
+    row = 0
+    col = 0
+    for label in (storeInfoList):
+        worksheet.write(row, col, label)
+        col += 1
+    for service in (servicesDict):
+        worksheet.write(row, col, service)
+        col += 1
+    row = 1
+    # workbook.close()
+
+# @arg - storeInfo [name, address]
+def inputStoreInfoExcel(storeInfo):
+    print(storeInfo)
+    print(row)
+    worksheet.write(row, 2, storeInfo[0])
+    worksheet.write(row, 3, storeInfo[1])
+
+# @arg - services [names of services offered]
+def inputServicesExcel(services):
+    if services: # check not an empty list
+        for s in services:
+            # value of 1 indicates service is offered
+            col = servicesDict[s]
+            worksheet.write(row, col, 1)
 
 # @arg - table data of one store
 # returns [store name, address]
@@ -76,28 +113,9 @@ def getServices(servicesTable):
     # print(services)
     return services
 
-def initExcelSheet():
-    workbook = xlsxwriter.Workbook('storeData711.xlsx')
-    worksheet = workbook.add_worksheet()
-    row = 0
-    col = 0
-    for label in (storeInfoList):
-        worksheet.write(row, col, label)
-        col += 1
-    for service in (servicesList):
-        worksheet.write(row, col, service)
-        col += 1
-    workbook.close()
-
-# @arg - storeInfo [name, address]
-def inputStoreInfoExcel(storeInfo):
-    return
-
-# @arg - services [names of services offered]
-def inputServicesExcel(services):
-    return
-
+getAllServicesDict()
 initExcelSheet()
+
 # list of stores on webPage for a city/district
 storesList = soup.find(id='seardh_bar_list', title='storeslist')
 table = storesList.tbody #can clean this up
@@ -110,29 +128,29 @@ for store in table:
         servicesTable = td.find("table", {"class": "icon_sps_li"})
         if servicesTable:
             services = getServices(servicesTable)
-            if services:
-                inputServicesExcel(services)
+            inputServicesExcel(services)
+            row += 1 #increment excel row
         # print(services)
-
+workbook.close()
 # put in nice spreadsheet
 # scale up, click through pages and counties (next button)
 
 # returns list of County buttons
-def getCountyButtons():
-    buttonElements = []
-    driver.find_element_by_id("a")
-    return buttonElements
-
-def find_stores():
-    html_text = requests.get(stores_url).text
-    # simulate click for keelung
-    # <a href="#" class="n_1" id="maplink_keelung">基隆市</a>
-    soup = BeautifulSoup(html_text, 'lxml')
-    # find(htmlTag, )
-    stores = soup.find_all('a', class_="n_1", string="地址")
-    for store in stores:
-    # a for append, add to file 'w' will overwrite existing info
-        with open(f'addresses.txt', 'a') as f:
-            county = store.text
-            print(county)
-            f.write(f"name: {county} \n")
+# def getCountyButtons():
+#     buttonElements = []
+#     driver.find_element_by_id("a")
+#     return buttonElements
+#
+# def find_stores():
+#     html_text = requests.get(stores_url).text
+#     # simulate click for keelung
+#     # <a href="#" class="n_1" id="maplink_keelung">基隆市</a>
+#     soup = BeautifulSoup(html_text, 'lxml')
+#     # find(htmlTag, )
+#     stores = soup.find_all('a', class_="n_1", string="地址")
+#     for store in stores:
+#     # a for append, add to file 'w' will overwrite existing info
+#         with open(f'addresses.txt', 'a') as f:
+#             county = store.text
+#             print(county)
+#             f.write(f"name: {county} \n")
