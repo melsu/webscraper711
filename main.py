@@ -118,56 +118,65 @@ def scrapeStores(soup, county, town):
 def getTownNames(soup):
     townHTMLElements = soup.find(id="counties_s_li", title="countrieslist")
     townLinks = townHTMLElements.find_all('a')
-    townIDs = []
-    for c in townLinks:
-        # townIDs.append(c['id'])
-        townIDs.append(c.text.strip())
-    return townIDs
+    townNames = []
+    for t in townLinks:
+        townNames.append(t.text)
+    return townNames
+
+def getCounties(soup):
+    mapHTMLElements = soup.find("div", id="tw")
+    countyLinks = mapHTMLElements.find_all('a')
+    countyNames = []
+    for c in countyLinks:
+        countyNames.append(c.text)
+    return countyNames
 
 def main():
     global soup
-    waitTime = 2
+    waitTime = 1
     initDriver()
-    # TODO click into all counties and cities
-    # for scaling, have list of maplinks and towns
-    # click buttons for next pages
-
-    # go back to homepage with map
-    keelung_button = driver.find_element(by=By.XPATH, value='//*[@id="maplink_keelung"]')
-    time.sleep(waitTime)
-    keelung_button.click()
     page_source = driver.page_source
     soup = BeautifulSoup(page_source, 'lxml')
+    countyNames = getCounties(soup)
     initExcelSheet()
-    townNames = getTownNames(soup)
-    county = 'filler'
-    # in county
-    for town in townNames:
-        townButton = driver.find_element(by=By.LINK_TEXT, value=town)
-        townButton.click()
-        time.sleep(waitTime) #sleep to get all the items loaded
-        #on town page
+    for county in countyNames:
+        countyButton = driver.find_element(by=By.LINK_TEXT, value=county)
+        countyButton.click()
+        time.sleep(waitTime)
+        # on county page i.e. Keelung
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, 'lxml')
-        scrapeStores(soup, county, town)
-        try:
-            nextButton = driver.find_element(by=By.XPATH, value='//*[@id="Next"]')
-        except NoSuchElementException:
-            nextButton = False
-        while nextButton:
-            nextButton.click()
-            time.sleep(waitTime)
+        townNames = getTownNames(soup)
+        for town in townNames:
+            townButton = driver.find_element(by=By.LINK_TEXT, value=town)
+            townButton.click()
+            time.sleep(waitTime) #sleep to get all the items loaded
+            #on town page i.e. Zhongzheng district
             page_source = driver.page_source
             soup = BeautifulSoup(page_source, 'lxml')
-            scrapeStores(soup, 'keelung_county_filler', town)
+            scrapeStores(soup, county, town)
             try:
                 nextButton = driver.find_element(by=By.XPATH, value='//*[@id="Next"]')
             except NoSuchElementException:
                 nextButton = False
-        # click back to list of towns page in county
-        countyHomePage = driver.find_element(by=By.XPATH, value='//*[@id="map_all_1"]/a')
-        countyHomePage.click()
-        time.sleep(waitTime) #sleep to get all the items loaded
+            while nextButton:
+                nextButton.click()
+                time.sleep(waitTime)
+                page_source = driver.page_source
+                soup = BeautifulSoup(page_source, 'lxml')
+                scrapeStores(soup, county, town)
+                try:
+                    nextButton = driver.find_element(by=By.XPATH, value='//*[@id="Next"]')
+                except NoSuchElementException:
+                    nextButton = False
+            # click back to list of towns page in county
+            countyHomePage = driver.find_element(by=By.XPATH, value='//*[@id="map_all_1"]/a')
+            countyHomePage.click()
+            time.sleep(waitTime) #sleep to get all the items loaded
+        # click back to map of taiwan
+        homePage = driver.find_element(by=By.XPATH, value='//*[@id="link_reset"]')
+        homePage.click()
+        time.sleep(waitTime)
     workbook.close()
 
 if __name__ == "__main__":
