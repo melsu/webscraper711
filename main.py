@@ -27,7 +27,6 @@ def getAllServicesDict():
         name = sN.text.strip()
         servicesDict[name] = col
         col += 1
-    return servicesDict
 
 def initExcelSheet():
     global workbook
@@ -102,7 +101,7 @@ def scrapeStores(soup, county, town):
     global row
     # list of stores on webPage for a city/district
     storesList = soup.find(id='seardh_bar_list', title='storeslist')
-    table = storesList.tbody #can clean this up
+    table = storesList.tbody
     for store in table:
         for td in store: # column of info in a row
             storeInfo = getStoreInfo(td)
