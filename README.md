@@ -6,5 +6,5 @@ To run:
 ```
 python3 main.py
 ```
-<img width="573" alt="Screenshot 2022-11-06 at 3 52 48 PM" src="https://user-images.githubusercontent.com/27800149/200202412-3733a2eb-d589-4ed9-90d7-29a47b926b4c.png">
+<img width="711" alt="711map" src="https://user-images.githubusercontent.com/27800149/200202412-3733a2eb-d589-4ed9-90d7-29a47b926b4c.png">
 <img width="711" alt="711mapchinese" src="https://github.com/user-attachments/assets/fe231501-f570-4d7b-a150-57b14a50b401">
